@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use iced::alignment::{self, Alignment};
 use iced::event::{self, Event};
 use iced::keyboard::{self, KeyCode, Modifiers};
@@ -11,7 +10,6 @@ use iced::widget::{
 use iced::window;
 use iced::{Application, Element};
 use iced::{Color, Command, Font, Length, Settings, Subscription};
-
 
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
@@ -29,7 +27,7 @@ pub fn main() -> iced::Result {
 #[derive(Debug, Default)]
 struct State {
     input_value: String,
-    tasks: Vec<Task>,
+    tasks: Vec<Instruction>,
     dirty: bool,
     saving: bool,
 }
@@ -41,7 +39,7 @@ enum InsViewer {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct Task {
+struct Instruction {
     instruction: String,
     input: String,
     output: String,
@@ -138,31 +136,45 @@ impl Application for InsViewer {
 // Persistence
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct SavedState {
-    input_value: String,
-    tasks: Vec<Task>,
+    tasks: Vec<Instruction>,
 }
 
 impl SavedState {
     fn path() -> std::path::PathBuf {
-        // let mut path = if let Some(project_dirs) =
-        //     directories_next::ProjectDirs::from("rs", "Iced", "Todos")
-        // {
-        //     project_dirs.data_dir().into()
-        // } else {
-        //     std::env::current_dir().unwrap_or_default()
-        // };
-        //
-
-        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
         path.push("instructions.jsonl");
-
         println!("path: {:?}", path);
 
         path
     }
 
     async fn load() -> Result<SavedState, LoadError> {
+        Self::load_jsonl().await
+    }
+
+    async fn load_jsonl() -> Result<SavedState, LoadError> {
+        use async_std::fs::File;
+        use async_std::io::BufReader;
+        use async_std::prelude::*;
+
+        let mut instructions: Vec<Instruction> = Vec::new();
+        let mut lines = BufReader::new(File::open(Self::path())
+            .await
+            .map_err(|_| LoadError::File)?)
+            .lines();
+
+        while let Some(line) = lines.next().await {
+            let instruction = serde_json::from_str(&line.map_err(|_| LoadError::File)?).map_err(|_| LoadError::Format)?;
+            instructions.push(instruction);
+        }
+
+        Ok(SavedState {
+            tasks: instructions,
+        })
+    }
+
+    async fn load_json() -> Result<SavedState, LoadError> {
         use async_std::prelude::*;
 
         let mut contents = String::new();
