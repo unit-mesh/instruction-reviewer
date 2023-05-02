@@ -20,12 +20,14 @@ use font_kit::handle::Handle;
 
 pub fn main() -> iced::Result {
     let raw = font_kit::source::SystemSource::new();
-    let faimlies = vec![FamilyName::Serif, FamilyName::SansSerif, FamilyName::Monospace];
+    let families = vec![
+        FamilyName::Title("PingFang SC".to_string()),
+        FamilyName::Serif, FamilyName::SansSerif, FamilyName::Monospace,
+    ];
     let font = raw.select_best_match(
-        &faimlies,
+        &families,
         &font_kit::properties::Properties::default(),
-    ).expect("Find font");
-
+    ).expect("no found font");
 
     let mut buf: Vec<u8> = Vec::new();
 
@@ -36,7 +38,9 @@ pub fn main() -> iced::Result {
             let mut reader = std::fs::File::open(path).expect("Read font");
             let _ = reader.read_to_end(&mut buf);
         }
-        _ => {}
+        font_kit::handle::Handle::Memory { bytes, .. } => {
+            buf = bytes.to_vec();
+        }
     }
 
     let buf = Box::leak(buf.to_vec().into_boxed_slice());
