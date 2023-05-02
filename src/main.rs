@@ -28,6 +28,7 @@ pub fn main() -> iced::Result {
 struct State {
     tasks: Vec<Instruction>,
     dirty: bool,
+    current_page: u32,
     saving: bool,
 }
 
@@ -65,15 +66,15 @@ enum Message {
     Loaded(Result<SavedState, LoadError>),
     Saved(Result<(), SaveError>),
     InputChanged(String),
-    CreateTask,
     TabPressed { shift: bool },
+    TaskMessage(usize, TaskMessage),
     ToggleFullscreen(window::Mode),
 }
 
 impl Application for InsViewer {
+    type Executor = iced::executor::Default;
     type Message = Message;
     type Theme = Theme;
-    type Executor = iced::executor::Default;
     type Flags = ();
 
     fn new(flags: Self::Flags) -> (Self, Command<Self::Message>) {
@@ -122,14 +123,35 @@ impl Application for InsViewer {
                     .center_y()
                     .into()
             }
-            InsViewer::Loaded(_) => {
+            InsViewer::Loaded(State { tasks, current_page, .. }) => {
                 let title = text("Reviewer")
                     .width(Length::Fill)
                     .size(24)
                     .style(Color::from([0.5, 0.5, 0.5]))
                     .horizontal_alignment(alignment::Horizontal::Center);
 
-                let content = column![title]
+                /// take the tasks by current_page * 100
+                let tasks: Vec<_> = tasks
+                    .iter()
+                    .skip((current_page * 50) as usize)
+                    .take(50)
+                    .collect();
+
+                let tasks: Element<_> = column(
+                    tasks
+                        .iter()
+                        .enumerate()
+                        .map(|(i, task)| {
+                            task.view(i).map(move |message| {
+                                Message::TaskMessage(i, message)
+                            })
+                        })
+                        .collect(),
+                )
+                    .spacing(10)
+                    .into();
+
+                let content = column![title, tasks]
                     .spacing(20)
                     .max_width(1800);
 
@@ -142,6 +164,29 @@ impl Application for InsViewer {
                     .into()
             }
         }
+    }
+}
+
+impl Instruction {
+    fn view(&self, i: usize) -> Element<TaskMessage> {
+        let instruction = Text::new(&self.instruction)
+            .width(Length::Fill);
+
+        let input = Text::new(&self.input)
+            .width(Length::Fill);
+
+        let output = Text::new(&self.output)
+            .width(Length::Fill);
+
+        column![
+                instruction,
+                row![
+                    input, output
+                ]
+            ]
+            .spacing(20)
+            .align_items(Alignment::Center)
+            .into()
     }
 }
 
@@ -207,6 +252,15 @@ impl SavedState {
 enum LoadError {
     File,
     Format,
+}
+
+#[derive(Debug, Clone)]
+pub enum TaskMessage {
+    Completed(bool),
+    Edit,
+    DescriptionEdited(String),
+    FinishEdition,
+    Delete,
 }
 
 #[derive(Debug, Clone)]
