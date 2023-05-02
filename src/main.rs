@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 pub fn main() -> iced::Result {
     InsViewer::run(Settings {
         window: window::Settings {
-            size: (500, 800),
+            size: (1600, 900),
             ..window::Settings::default()
         },
         ..Settings::default()
@@ -26,7 +26,6 @@ pub fn main() -> iced::Result {
 
 #[derive(Debug, Default)]
 struct State {
-    input_value: String,
     tasks: Vec<Instruction>,
     dirty: bool,
     saving: bool,
@@ -90,7 +89,20 @@ impl Application for InsViewer {
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match self {
-            InsViewer::Loading => {}
+            InsViewer::Loading => {
+                match message {
+                    Message::Loaded(Ok(state)) => {
+                        *self = InsViewer::Loaded(State {
+                            tasks: state.tasks,
+                            ..State::default()
+                        });
+                    }
+                    Message::Loaded(Err(_)) => {
+                        *self = InsViewer::Loaded(State::default());
+                    }
+                    _ => {}
+                }
+            }
             InsViewer::Loaded(_) => {}
         }
 
@@ -111,15 +123,15 @@ impl Application for InsViewer {
                     .into()
             }
             InsViewer::Loaded(_) => {
-                let title = text("todos")
+                let title = text("Reviewer")
                     .width(Length::Fill)
-                    .size(100)
+                    .size(24)
                     .style(Color::from([0.5, 0.5, 0.5]))
                     .horizontal_alignment(alignment::Horizontal::Center);
 
                 let content = column![title]
                     .spacing(20)
-                    .max_width(800);
+                    .max_width(1800);
 
                 scrollable(
                     container(content)
