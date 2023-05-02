@@ -1,3 +1,4 @@
+use std::io::Bytes;
 use iced::alignment::{self, Alignment};
 use iced::event::{self, Event};
 use iced::keyboard::{self, KeyCode, Modifiers};
@@ -14,12 +15,42 @@ use iced::{Color, Command, Font, Length, Settings, Subscription};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
+use font_kit::family_name::FamilyName;
+use font_kit::handle::Handle;
+
 pub fn main() -> iced::Result {
+    let raw = font_kit::source::SystemSource::new();
+    let faimlies = vec![FamilyName::Serif, FamilyName::SansSerif, FamilyName::Monospace];
+    let font = raw.select_best_match(
+        &faimlies,
+        &font_kit::properties::Properties::default(),
+    ).expect("Find font");
+
+
+    let mut buf: Vec<u8> = Vec::new();
+
+    match font {
+        font_kit::handle::Handle::Path { path, .. } => {
+            use std::io::Read;
+
+            let mut reader = std::fs::File::open(path).expect("Read font");
+            let _ = reader.read_to_end(&mut buf);
+        }
+        _ => {}
+    }
+
+    let buf = Box::leak(buf.to_vec().into_boxed_slice());
+
+    run_main(buf)
+}
+
+fn run_main(buf: &'static [u8]) -> Result<(), iced::Error> {
     InsViewer::run(Settings {
         window: window::Settings {
             size: (1600, 900),
             ..window::Settings::default()
         },
+        default_font: Some(buf),
         ..Settings::default()
     })
 }
