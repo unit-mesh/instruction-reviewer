@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use iced::alignment::{self, Alignment};
 use iced::event::{self, Event};
 use iced::keyboard::{self, KeyCode, Modifiers};
@@ -54,6 +55,12 @@ pub enum TaskState {
     Idle,
     Editing,
     Done,
+}
+
+impl Default for TaskState {
+    fn default() -> Self {
+        Self::Idle
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -137,15 +144,20 @@ struct SavedState {
 
 impl SavedState {
     fn path() -> std::path::PathBuf {
-        let mut path = if let Some(project_dirs) =
-            directories_next::ProjectDirs::from("rs", "Iced", "Todos")
-        {
-            project_dirs.data_dir().into()
-        } else {
-            std::env::current_dir().unwrap_or_default()
-        };
+        // let mut path = if let Some(project_dirs) =
+        //     directories_next::ProjectDirs::from("rs", "Iced", "Todos")
+        // {
+        //     project_dirs.data_dir().into()
+        // } else {
+        //     std::env::current_dir().unwrap_or_default()
+        // };
+        //
 
-        path.push("instructions.json");
+        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+
+        path.push("instructions.jsonl");
+
+        println!("path: {:?}", path);
 
         path
     }
