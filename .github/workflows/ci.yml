@@ -12,19 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: install linux dependencies
+      - name: install cairo
+        run: brew install cairo
+        if: contains(matrix.os, 'mac')
+
+      - name: install libgtk-dev
         run: |
           sudo apt update
-          sudo apt install libpango1.0-dev libxkbcommon-dev libxkbcommon-x11-dev
+          sudo apt install libgtk-3-dev
         if: contains(matrix.os, 'ubuntu')
-
-      - name: install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          components: clippy
-          profile: minimal
-          override: true
 
       - name: restore cache
         uses: Swatinem/rust-cache@v1
