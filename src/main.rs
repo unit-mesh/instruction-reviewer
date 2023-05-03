@@ -74,12 +74,14 @@ impl AppDelegate<AppState> for Delegate {
         _env: &Env,
     ) -> Handled {
         if let Some(file_info) = cmd.get(commands::SAVE_FILE_AS) {
-            // let mut file = File::open(file_info.path()).unwrap();
-            // JsonWriter::new(&mut file)
-            //     .with_json_format(JsonFormat::JsonLines)
-            //     .finish(&mut *data.df)
-            //     .unwrap()
+            let mut file = File::open(file_info.path()).unwrap();
+            let mut df = Arc::get_mut(&mut data.df).unwrap();
+            JsonWriter::new(&mut file)
+                .with_json_format(JsonFormat::JsonLines)
+                .finish(&mut df)
+                .unwrap()
         }
+
         if let Some(file_info) = cmd.get(commands::OPEN_FILE) {
             let mut file = File::open(file_info.path()).unwrap();
             match file_info.path.extension() {
@@ -88,14 +90,12 @@ impl AppDelegate<AppState> for Delegate {
                         Some("json") => {
                             use polars::prelude::*;
 
-                            let df = JsonReader::new(&mut file).finish().unwrap();
+                            let mut df = JsonReader::new(&mut file).finish().unwrap();
                             data.count = df.height().to_string();
                             data.df = Arc::new(df);
-
-                            println!("{:?}", data.count)
                         }
                         Some("jsonl") => {
-                            let df = JsonLineReader::new(&mut file).finish().unwrap();
+                            let mut df = JsonLineReader::new(&mut file).finish().unwrap();
                             data.count = df.height().to_string();
                             data.df = Arc::new(df);
                         }
