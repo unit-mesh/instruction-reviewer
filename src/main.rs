@@ -4,10 +4,7 @@ use iced::event::{self, Event};
 use iced::keyboard::{self, KeyCode, Modifiers};
 use iced::{Renderer, subscription};
 use iced::theme::{self, Theme};
-use iced::widget::{
-    self, button, checkbox, column, container, row, scrollable, text,
-    text_input, Text,
-};
+use iced::widget::{self, button, checkbox, column, container, row, scrollable, text, text_input, Text, TextInput};
 use iced::window;
 use iced::{Application, Element};
 use iced::{Color, Command, Font, Length, Settings, Subscription};
@@ -138,11 +135,51 @@ impl Application for InsViewer {
                     }
                     _ => {}
                 }
-            }
-            InsViewer::Loaded(_) => {}
-        }
 
-        Command::none()
+                Command::none()
+            }
+            InsViewer::Loaded(state) => {
+                let command = match message {
+                    Message::Saved(Ok(())) => {
+                        state.saving = false;
+                        Command::none()
+                    }
+                    Message::Saved(Err(_)) => {
+                        state.saving = false;
+                        Command::none()
+                    }
+                    Message::InputChanged(input) => {
+                        state.dirty = true;
+                        state.tasks[state.current_page as usize].input = input;
+                        Command::none()
+                    }
+                    Message::TabPressed { shift } => {
+                        if shift {
+                            if state.current_page > 0 {
+                                state.current_page -= 1;
+                            }
+                        } else {
+                            state.current_page += 1;
+                        }
+
+                        Command::none()
+                    }
+                    Message::TaskMessage(i, task_message) => {
+                        // state.dirty = true;
+                        // state.tasks[i].update(task_message);
+                        Command::none()
+                    }
+                    Message::ToggleFullscreen(mode) => {
+                        window::change_mode(mode)
+                    }
+                    _ => {
+                        Command::none()
+                    }
+                };
+
+                Command::batch(vec![command])
+            }
+        }
     }
 
     fn view(&self) -> Element<'_, Self::Message, Renderer<Self::Theme>> {
@@ -165,7 +202,6 @@ impl Application for InsViewer {
                     .style(Color::from([0.5, 0.5, 0.5]))
                     .horizontal_alignment(alignment::Horizontal::Center);
 
-                /// take the tasks by current_page * 100
                 let tasks: Vec<_> = tasks
                     .iter()
                     .skip((current_page * 50) as usize)
@@ -204,10 +240,12 @@ impl Application for InsViewer {
 
 impl Instruction {
     fn view(&self, i: usize) -> Element<TaskMessage> {
-        let instruction = Text::new(&self.instruction)
+        let instruction = TextInput::new("instruction", &self.instruction)
+            .on_input(TaskMessage::InstructionChanged)
             .width(Length::Fill);
 
-        let input = Text::new(&self.input)
+        let input = TextInput::new("input", &self.input)
+            .on_input(TaskMessage::InputChanged)
             .width(Length::Fill);
 
         let output = Text::new(&self.output)
@@ -293,7 +331,8 @@ enum LoadError {
 pub enum TaskMessage {
     Completed(bool),
     Edit,
-    DescriptionEdited(String),
+    InstructionChanged(String),
+    InputChanged(String),
     FinishEdition,
     Delete,
 }
