@@ -16,5 +16,4 @@ directories-next = "2.0"
 # dataframe with rust
 polars = { version = "0.28.0", features = ["lazy", "streaming", "json"] }
 
-
-druid = { git = "https://github.com/linebender/druid.git" }
+druid = { git = "https://github.com/linebender/druid.git", features = ["im"] }

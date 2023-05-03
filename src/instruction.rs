@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
+use druid::Data;
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Data, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Instruction {
-    instruction: String,
-    input: String,
-    output: String,
+    pub instruction: String,
+    pub input: String,
+    pub output: String,
 }

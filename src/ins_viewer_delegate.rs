@@ -35,12 +35,12 @@ impl AppDelegate<AppState> for Delegate {
                             use polars::prelude::*;
 
                             let mut df = JsonReader::new(&mut file).finish().unwrap();
-                            data.count = df.height().to_string();
+                            data.count = df.height() as u32;
                             data.df = Arc::new(df);
                         }
                         Some("jsonl") => {
                             let mut df = JsonLineReader::new(&mut file).finish().unwrap();
-                            data.count = df.height().to_string();
+                            data.count = df.height() as u32;
                             data.df = Arc::new(df);
                         }
                         _ => println!("Invalid file type"),
