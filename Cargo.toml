@@ -14,7 +14,7 @@ async-std = "1.0"
 directories-next = "2.0"
 
 # dataframe with rust
-polars = "0.28.0"
+polars = { version = "0.28.0", features = ["lazy", "streaming", "json"] }
 
 
 druid = { git = "https://github.com/linebender/druid.git" }
