@@ -13,6 +13,8 @@ once_cell = "1.15"
 async-std = "1.0"
 directories-next = "2.0"
 
-#font-kit = "0.10"
+# dataframe with rust
+polars = "0.28.0"
+
 
 druid = { git = "https://github.com/linebender/druid.git" }
