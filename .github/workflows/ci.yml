@@ -8,9 +8,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+
+      - name: install linux dependencies
+        run: |
+          sudo apt update
+          sudo apt install libpango1.0-dev libxkbcommon-dev libxkbcommon-x11-dev
+        if: contains(matrix.os, 'ubuntu')
+
+      - name: install stable toolchain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          components: clippy
+          profile: minimal
+          override: true
+
+      - name: restore cache
+        uses: Swatinem/rust-cache@v1
+
       - uses: actions-rs/cargo@v1
         with:
           command: build
