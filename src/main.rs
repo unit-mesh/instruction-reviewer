@@ -5,7 +5,7 @@ use std::fs::File;
 use std::path::PathBuf;
 use std::sync::Arc;
 use druid::widget::{Button, Flex, Label, TextBox};
-use druid::{AppDelegate, AppLauncher, Data, DelegateCtx, Lens, LocalizedString, PlatformError, Widget, WidgetExt, WindowDesc, commands, Command, Env, FileDialogOptions, FileSpec, Handled, Target, UnitPoint};
+use druid::{AppDelegate, AppLauncher, Data, DelegateCtx, Lens, LocalizedString, PlatformError, Widget, WidgetExt, WindowDesc, commands, Command, Env, FileDialogOptions, FileSpec, Handled, Target, UnitPoint, Color};
 use polars::frame::DataFrame;
 use polars::prelude::{JsonFormat, JsonWriter, SerWriter, JsonReader, JsonLineReader, SerReader};
 use crate::instruction::Instruction;
@@ -42,7 +42,8 @@ const TEXT_BOX_WIDTH: f64 = 200.0;
 
 fn ui_builder() -> impl Widget<AppState> {
     let label = Label::new(|data: &AppState, _env: &Env| format!("Count: {}", data.count))
-        .with_text_size(32.0);
+        .with_text_size(32.0)
+        .with_text_color(Color::BLACK);
 
     //
     // let count = TextBox::new()
@@ -61,6 +62,7 @@ fn ui_builder() -> impl Widget<AppState> {
         .with_child(label)
         .with_spacer(VERTICAL_WIDGET_SPACING)
         .align_vertical(UnitPoint::CENTER)
+        .background(Color::WHITE)
 }
 
 // TODO: modify this to save the instruction to a file
